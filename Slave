@@ -1,0 +1,29 @@
+#include <Wire.h>
+
+#define RELAY_PIN 2  // Пин, к которому подключено реле (например, D2)
+
+void setup() {
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);  // Изначально реле выключено
+
+  Serial.begin(115200);  // Инициализация Serial Monitor для вывода данных
+  Wire.begin(8);  // Инициализация I2C как Slave с адресом 8
+  Wire.onReceive(receiveData);  // Регистрация функции для обработки получения данных
+}
+
+void loop() {
+  // Постоянно слушаем I2C и обрабатываем данные
+}
+
+void receiveData(int byteCount) {
+  while (Wire.available()) {
+    char c = Wire.read();  // Чтение данных, отправленных Master
+    if (c == '1') {
+      digitalWrite(RELAY_PIN, HIGH);  // Включаем реле
+      Serial.println("Relay ON");     // Выводим в Serial, что реле включено
+    } else if (c == '0') {
+      digitalWrite(RELAY_PIN, LOW);   // Выключаем реле
+      Serial.println("Relay OFF");    // Выводим в Serial, что реле выключено
+    }
+  }
+}
