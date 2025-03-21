@@ -1,0 +1,44 @@
+#include <Wire.h>
+
+#define SLAVE_ADDRESS 8  // Адрес Slave устройства
+#define BUTTON_PIN 3     // Пин, к которому подключена кнопка
+
+bool lastButtonState = HIGH;  // Состояние кнопки в предыдущем цикле (изначально не нажата)
+bool relayState = false;      // Состояние реле (false - выключено, true - включено)
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();  // Инициализация I2C как Master
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);  // Настройка пина кнопки с подтягивающим резистором
+}
+
+void loop() {
+  // Чтение состояния кнопки
+  bool buttonState = digitalRead(BUTTON_PIN);
+
+  // Проверка на изменение состояния кнопки (отпускание/нажатие)
+  if (buttonState == LOW && lastButtonState == HIGH) {
+    // Если кнопка была нажата (состояние LOW), переключаем реле
+    relayState = !relayState;  // Переключение состояния реле
+
+    // Отправляем команду на Slave для включения/выключения реле
+    if (relayState) {
+      sendCommandToSlave('1');  // Включаем реле
+    } else {
+      sendCommandToSlave('0');  // Выключаем реле
+    }
+
+    // Небольшая задержка, чтобы избежать дребезга кнопки
+    delay(200);  // Пауза для стабилизации (200 мс)
+
+  }
+
+  lastButtonState = buttonState;  // Обновляем состояние кнопки для следующей итерации
+}
+
+void sendCommandToSlave(char command) {
+  Wire.beginTransmission(SLAVE_ADDRESS);  // Начинаем передачу данных на Slave
+  Wire.write(command);  // Отправляем команду
+  Wire.endTransmission();  // Завершаем передачу данных
+}
